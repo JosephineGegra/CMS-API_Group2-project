@@ -1,87 +1,98 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Table, DateTime, CHAR, DECIMAL
+from sqlalchemy import Column, Integer, String, ForeignKey, Table, CHAR, Date, DateTime
 from sqlalchemy.orm import relationship
 from Database import Base
 
-
+# Association Tables
 Actor_Play = Table(
-    'Actor_Play', Base.metadata,
-    Column('ActorId', Integer, ForeignKey('Actor.ActorId'), primary_key=True),
-    Column('PlayId', Integer, ForeignKey('Play.PlayId'), primary_key=True)
+    'actor_play', Base.metadata,
+    Column('actor_id', Integer, ForeignKey('actors.id'), primary_key=True),
+    Column('play_id', Integer, ForeignKey('plays.id'), primary_key=True)
 )
 
-Director_Play = Table(
-    'Director_Play', Base.metadata,
-    Column('DirectorId', Integer, ForeignKey('Director.DirectorId'), primary_key=True),
-    Column('PlayId', Integer, ForeignKey('Play.PlayId'), primary_key=True)
-)
+# Play-Director is now one-to-many (a director has many plays), so no association table needed
+
+# Models
 
 class Play(Base):
-    __tablename__ = 'Play'
-    PlayId = Column(Integer, primary_key=True)
-    Title = Column(String(100))
-    Duration = Column(Integer)
-    Genre = Column(String(20))
-    Synopsis = Column(String(2000))
+    __tablename__ = "plays"
 
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, nullable=False)
+    genre = Column(String, nullable=False)
+    duration_minutes = Column(Integer, nullable=False)
+    description = Column(String, nullable=False)
+    director_id = Column(Integer, ForeignKey("directors.id"))
+
+    director = relationship("Director", back_populates="plays")
+    showtimes = relationship("ShowTime", back_populates="play")
     actors = relationship("Actor", secondary=Actor_Play, back_populates="plays")
-    directors = relationship("Director", secondary=Director_Play, back_populates="plays")
-    showtimes = relationship("ShowTimes", back_populates="play")
+
+
 
 class Actor(Base):
-    __tablename__ = 'Actor'
-    ActorId = Column(Integer, primary_key=True)
-    Name = Column(String(100))
-    Gender = Column(CHAR(1))
-    DateOfBirth = Column(Integer)
+    __tablename__ = 'actors'
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True, index=True, nullable=False)
+    gender = Column(CHAR(1))
+    DateOfBirth = Column(Date)
+
 
     plays = relationship("Play", secondary=Actor_Play, back_populates="actors")
 
-class Director(Base):
-    __tablename__ = 'Director'
-    DirectorId = Column(Integer, primary_key=True)
-    Name = Column(String(100))
-    DateOfBirth = Column(Integer)
-    Citizenship = Column(String(100))
 
-    plays = relationship("Play", secondary=Director_Play, back_populates="directors")
+class Director(Base):
+    __tablename__ = 'directors'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100))
+    date_of_birth = Column(Integer)
+    citizenship = Column(String(100))
+
+    plays = relationship("Play", back_populates="director")
+
 
 class Customer(Base):
-    __tablename__ = 'Customer'
-    CustomerId = Column(Integer, primary_key=True)
-    Name = Column(String(100))
-    TelephoneNo = Column(String(100))
+    __tablename__ = 'customers'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100))
+    telephone_no = Column(String(100))
 
     tickets = relationship("Ticket", back_populates="customer")
 
-class Seat(Base):
-    __tablename__ = 'Seat'
-    RowNo = Column(Integer, primary_key=True)
-    SeatNo = Column(Integer, primary_key=True)
 
-class ShowTimes(Base):
-    __tablename__ = 'ShowTimes'
-    DateAndTime = Column(DateTime, primary_key=True)
-    Play_PlayId = Column(Integer, ForeignKey('Play.PlayId'), primary_key=True)
+class Seat(Base):
+    __tablename__ = 'seats'
+    row_no = Column(Integer, primary_key=True)
+    seat_no = Column(Integer, primary_key=True)
+
+class ShowTime(Base):
+    __tablename__ = "showtimes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    show_time = Column(DateTime, nullable=False)
+    play_id = Column(Integer, ForeignKey("plays.id"), nullable=False)
 
     play = relationship("Play", back_populates="showtimes")
     tickets = relationship("Ticket", back_populates="showtime")
 
+
 class Ticket(Base):
-    __tablename__ = 'Ticket'
-    Seat_RowNo = Column(Integer, primary_key=True)
-    Seat_SeatNo = Column(Integer, primary_key=True)
-    ShowTimes_DateAndTime = Column(DateTime, primary_key=True)
-    ShowTimes_Play_PlayId = Column(Integer, primary_key=True)
-    Customer_CustomerId = Column(Integer, ForeignKey('Customer.CustomerId'), primary_key=True)
-    TicketNo = Column(String(10))
+    __tablename__ = "tickets"
 
+    id = Column(Integer, primary_key=True, index=True)
+    seat_number = Column(String, nullable=False)
+    showtime_id = Column(Integer, ForeignKey("showtimes.id"), nullable=False)
+    customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False)
+
+    showtime = relationship("ShowTime", back_populates="tickets")
     customer = relationship("Customer", back_populates="tickets")
-    showtime = relationship("ShowTimes", back_populates="tickets")
 
-class Price(Base):
-    __tablename__ = 'Price'
-    Seat_RowNo = Column(Integer, primary_key=True)
-    Seat_SeatNo = Column(Integer, primary_key=True)
-    ShowTimes_DateAndTime = Column(DateTime, primary_key=True)
-    ShowTimes_Play_PlayId = Column(Integer, primary_key=True)
-    Price = Column(DECIMAL(10,2))
+
+class User(Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String)
+    email = Column(String, unique=True, index=True)
+    hashed_password = Column(String)
