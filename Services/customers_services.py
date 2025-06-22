@@ -1,8 +1,8 @@
 from sqlalchemy.orm import Session
-from models import Customer
+from Models import Customer
 import Schema
 
-def create_customer(db: Session, customer_data: Schema.CustomerCreate):
+def create_customer(db: Session, customer_data: Schema.CustomerCreate) -> Customer:
     customer = Customer(**customer_data.model_dump())
     db.add(customer)
     db.commit()

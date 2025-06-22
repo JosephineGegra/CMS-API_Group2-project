@@ -1,10 +1,10 @@
 from sqlalchemy.orm import Session
-from models import ShowTime
+from Models import ShowTime
 import Schema
 
 
 
-def create_showtime(db: Session, showtime_data: Schema.ShowtimeCreate):
+def create_showtime(db: Session, showtime_data: Schema.ShowtimeCreate) -> ShowTime:
     showtime = ShowTime(**showtime_data.model_dump())
     db.add(showtime)
     db.commit()

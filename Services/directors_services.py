@@ -1,9 +1,10 @@
 from sqlalchemy.orm import Session
-from models import Director
+from Models import Director
 import Schema
 
 def create_director(db: Session, director_data: Schema.DirectorCreate):
-    director = Director(**director_data.dict())
+    director_dict = director_data.dict(exclude_unset=True)
+    director = Director(**director_dict)
     db.add(director)
     db.commit()
     db.refresh(director)

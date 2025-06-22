@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.params import Depends
 from sqlalchemy.orm import Session
 from Database import get_db
-import Schema, models
+import Schema, Models
 from Oauth2 import get_current_user
 from Services.play_services import (
     create_play, get_all_plays, get_play_by_id,
@@ -16,23 +16,23 @@ router = APIRouter(prefix="/plays", tags=["Plays"])
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=Schema.Plays)
 def create_play(play: Schema.PlayCreate, db: Session = Depends(get_db)):
-    director = db.query(models.Director).filter(models.Director.id == play.director_id).first()
+    director = db.query(Models.Director).filter(Models.Director.id == play.director_id).first()
     if not director:
         raise HTTPException(status_code=404, detail="Director not found")
-    db_play = models.Play(**play.dict())
+    db_play = Models.Play(**play.dict())
     db.add(db_play)
     db.commit()
     db.refresh(db_play)
     return db_play
 
 
-@router.get("/", response_model=list[PlayResponse])
+@router.get("/", response_model=list[Schema.PlayResponse])
 def read_all_plays(db: Session = Depends(get_db),
-                   current_user: models.User = Depends(get_current_user)
+                   current_user: Models.User = Depends(get_current_user)
 ):
     return get_all_plays(db)
 
-@router.get("/{play_id}", response_model=PlayResponse)
+@router.get("/{play_id}", response_model=Schema.PlayResponse)
 def get_play_route(play_id: int, db: Session = Depends(get_db)):
     play = get_play_by_id(db, play_id)
     if not play:

@@ -1,9 +1,9 @@
 from sqlalchemy.orm import Session
-from models import Ticket
+from Models import Ticket
 import Schema
 
 
-def create_ticket(db: Session, ticket_data: Schema.TicketCreate):
+def create_ticket(db: Session, ticket_data: Schema.TicketCreate) -> Ticket:
     ticket = Ticket(**ticket_data.model_dump())
     db.add(ticket)
     db.commit()

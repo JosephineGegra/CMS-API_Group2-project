@@ -1,8 +1,8 @@
 from sqlalchemy.orm import Session
-from models import Actor
+from Models import Actor
 import Schema
 
-def create_actor(db: Session, actor_data: Schema.ActorCreate):
+def create_actor(db: Session, actor_data: Schema.ActorCreate) -> Actor:
     actor = Actor(**actor_data.dict())
     db.add(actor)
     db.commit()

@@ -1,37 +1,28 @@
-from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
-from jose import jwt, JWTError
+from fastapi import Depends, HTTPException
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from JWTtoken import verify_token
 from sqlalchemy.orm import Session
 from Database import get_db
-from models import User
+from Models import User
 
 # Configuration
 SECRET_KEY = "905004490J2J"
 ALGORITHM = "HS256"
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+auth_scheme = HTTPBearer()
 
-# Verifies JWT and fetches the current user from the DB
-def get_current_user(
-    token: str = Depends(oauth2_scheme),
-    db: Session = Depends(get_db)
-):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        email: str = payload.get("sub")
-        if email is None:
-            raise credentials_exception
-    except JWTError:
-        raise credentials_exception
-
-    user = db.query(User).filter(User.email == email).first()
-    if user is None:
-        raise credentials_exception
-
+def get_current_user(token: HTTPAuthorizationCredentials = Depends(auth_scheme), db: Session = Depends(get_db)):
+    data = verify_token(token.credentials)
+    user = db.query(User).filter(User.email == data["email"]).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
     return user
+
+def require_role(role: str):
+    def checker(token: HTTPAuthorizationCredentials = Depends(auth_scheme)):
+        data = verify_token(token.credentials)
+        if data["role"] != role:
+            raise HTTPException(status_code=403, detail="Access forbidden: Admins only")
+        return data
+    return checker
+

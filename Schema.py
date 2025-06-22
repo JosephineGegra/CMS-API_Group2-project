@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, validator
 from typing import Optional
 from datetime import date, datetime
 
@@ -95,7 +95,7 @@ class PlayResponse(PlayBase):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 #Actors Schemas
@@ -103,6 +103,18 @@ class ActorBase(BaseModel):
     name: str
     gender: str
     DateOfBirth: Optional[date] = None
+
+    @validator("gender")
+    def validate_gender(cls, value):
+        gender_map = {
+            "Male": "M",
+            "Female": "F",
+            "M": "M",
+            "F": "F"
+        }
+        if value not in gender_map:
+            raise ValueError("Gender must be 'Male', 'Female', 'M', or 'F'")
+        return gender_map[value]
 
 class ActorCreate(ActorBase):
     pass
@@ -116,7 +128,7 @@ class ActorResponse(ActorBase):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 #customer schemas
 
@@ -135,47 +147,41 @@ class CustomerResponse(CustomerBase):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 #Tickets schema
 class TicketBase(BaseModel):
-    seat_row_no: int
-    seat_seat_no: int
-    showtime_date_time: datetime
-    showtime_play_id: int
+
+    seat_number: int
+    showtime_id: int
     customer_id: int
-    ticket_no: str
+
 
 class TicketCreate(TicketBase):
     pass
 
 class TicketUpdate(BaseModel):
-    seat_row_no: Optional[int] = None
-    seat_seat_no: Optional[int] = None
-    showtime_date_time: Optional[datetime] = None
-    showtime_play_id: Optional[int] = None
-    customer_id: Optional[int] = None
-    ticket_no: Optional[str] = None
+    seat_number: int
+    showtime_id: int
+    customer_id: int
 
 class TicketResponse(TicketBase):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 #Directors schema
 
 class DirectorBase(BaseModel):
-    id: int
     name: str
     date_of_birth: Optional[date] = None
-    citizenship: Optional[str] = None
+    citizenship: Optional[str] = "Sierra Leonean"  # Set default to "Sierra Leonean"
 
 class DirectorCreate(DirectorBase):
     pass
 
 class DirectorUpdate(DirectorBase):
-    id: Optional[int] = None
     name: Optional[str] = None
     date_of_birth: Optional[date] = None
     citizenship: Optional[str] = None
@@ -184,7 +190,7 @@ class DirectorResponse(DirectorBase):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 #Showtimes schema
@@ -203,7 +209,7 @@ class ShowtimeResponse(ShowtimeBase):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class PriceBase(BaseModel):
     seat_row_no: int
@@ -226,7 +232,7 @@ class PriceResponse(PriceBase):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 #seats schema
 class SeatBase(BaseModel):
@@ -244,7 +250,7 @@ class SeatResponse(SeatBase):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Many-to-Many relation schemas
 # actor_play
@@ -260,7 +266,7 @@ class ActorPlayResponse(ActorPlayBase):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # director_play
@@ -276,7 +282,7 @@ class DirectorPlayResponse(DirectorPlayBase):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 
@@ -285,17 +291,19 @@ class Login(BaseModel):
     password: str
 
 class UserCreate(BaseModel):
-    name: str
+    username: str
     email: EmailStr
     password: str
+    role: str
 
 class UserOut(BaseModel):
     id: int
-    name: str
+    username: str
     email: EmailStr
+    role: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class Token(BaseModel):
     access_token: str

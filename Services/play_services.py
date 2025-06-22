@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from Schema import PlayCreate, PlayUpdate, Plays
-from models import Play
+from Schema import PlayCreate, PlayUpdate
+from Models import Play
 from typing import List, Optional
 
 
@@ -13,11 +13,11 @@ def create_play(db: Session, play_data: PlayCreate) -> Play:
 
 
 def get_all_plays(db: Session, skip: int = 0, limit: int = 10) -> List[Play]:
-    return db.query(Plays).offset(skip).limit(limit).all()
+    return db.query(Play).offset(skip).limit(limit).all()
 
 
 def get_play_by_id(db: Session, play_id: int) -> Optional[Play]:
-    return db.query(Play).filter(Plays.id == play_id).first()
+    return db.query(Play).filter(Play.id == play_id).first()
 
 
 def update_play(db: Session, play_id: int, play_data: PlayUpdate) -> Optional[Play]:
